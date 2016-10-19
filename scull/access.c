@@ -11,8 +11,6 @@
  * Drivers" by Alessandro Rubini and Jonathan Corbet, published
  * by O'Reilly & Associates.   No warranty is attached;
  * we cannot take responsibility for errors or fitness for use.
- *
- * $Id: access.c,v 1.17 2004/09/26 07:29:56 gregkh Exp $
  */
 
 /* FIXME: cloned devices as a use for kobjects? */

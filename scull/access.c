@@ -414,5 +414,4 @@ void scull_access_cleanup(void)
 
 	/* Free up our number space */
 	unregister_chrdev_region(scull_a_firstdev, SCULL_N_ADEVS);
-	return;
 }

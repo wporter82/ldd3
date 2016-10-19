@@ -13,7 +13,7 @@
  * we cannot take responsibility for errors or fitness for use.
  *
  */
- 
+
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 
@@ -33,14 +33,14 @@
 #include "scull.h"		/* local definitions */
 
 struct scull_pipe {
-        wait_queue_head_t inq, outq;       /* read and write queues */
-        char *buffer, *end;                /* begin of buf, end of buf */
-        int buffersize;                    /* used in pointer arithmetic */
-        char *rp, *wp;                     /* where to read, where to write */
-        int nreaders, nwriters;            /* number of openings for r/w */
-        struct fasync_struct *async_queue; /* asynchronous readers */
-        struct semaphore sem;              /* mutual exclusion semaphore */
-        struct cdev cdev;                  /* Char device structure */
+	wait_queue_head_t inq, outq;	   /* read and write queues */
+	char *buffer, *end;		   /* begin of buf, end of buf */
+	int buffersize;			   /* used in pointer arithmetic */
+	char *rp, *wp;			   /* where to read, where to write */
+	int nreaders, nwriters;		   /* number of openings for r/w */
+	struct fasync_struct *async_queue; /* asynchronous readers */
+	struct semaphore sem;		   /* mutual exclusion semaphore */
+	struct cdev cdev;		   /* Char device structure */
 };
 
 /* parameters */
@@ -106,7 +106,8 @@ static int scull_p_release(struct inode *inode, struct file *filp)
 		dev->nwriters--;
 	if (dev->nreaders + dev->nwriters == 0) {
 		kfree(dev->buffer);
-		dev->buffer = NULL; /* the other fields are not checked on open */
+		/* the other fields are not checked on open */
+		dev->buffer = NULL;
 	}
 	up(&dev->sem);
 	return 0;
@@ -117,8 +118,8 @@ static int scull_p_release(struct inode *inode, struct file *filp)
  * Data management: read and write
  */
 
-static ssize_t scull_p_read (struct file *filp, char __user *buf, size_t count,
-                loff_t *f_pos)
+static ssize_t scull_p_read(struct file *filp, char __user *buf, size_t count,
+		loff_t *f_pos)
 {
 	struct scull_pipe *dev = filp->private_data;
 
@@ -130,8 +131,10 @@ static ssize_t scull_p_read (struct file *filp, char __user *buf, size_t count,
 		if (filp->f_flags & O_NONBLOCK)
 			return -EAGAIN;
 		PDEBUG("\"%s\" reading: going to sleep\n", current->comm);
-		if (wait_event_interruptible(dev->inq, (dev->rp != dev->wp)))
-			return -ERESTARTSYS; /* signal: tell the fs layer to handle it */
+		if (wait_event_interruptible(dev->inq, (dev->rp != dev->wp))) {
+			/* signal: tell the fs layer to handle it */
+			return -ERESTARTSYS;
+		}
 		/* otherwise loop, but first reacquire the lock */
 		if (down_interruptible(&dev->sem))
 			return -ERESTARTSYS;
@@ -142,42 +145,45 @@ static ssize_t scull_p_read (struct file *filp, char __user *buf, size_t count,
 	else /* the write pointer has wrapped, return data up to dev->end */
 		count = min(count, (size_t)(dev->end - dev->rp));
 	if (copy_to_user(buf, dev->rp, count)) {
-		up (&dev->sem);
+		up(&dev->sem);
 		return -EFAULT;
 	}
 	dev->rp += count;
 	if (dev->rp == dev->end)
 		dev->rp = dev->buffer; /* wrapped */
-	up (&dev->sem);
+	up(&dev->sem);
 
 	/* finally, awake any writers and return */
 	wake_up_interruptible(&dev->outq);
-	PDEBUG("\"%s\" did read %li bytes\n",current->comm, (long)count);
+	PDEBUG("\"%s\" did read %li bytes\n", current->comm, (long)count);
 	return count;
 }
 
 /* Wait for space for writing; caller must hold device semaphore.  On
- * error the semaphore will be released before returning. */
+ * error the semaphore will be released before returning.
+ */
 static int scull_getwritespace(struct scull_pipe *dev, struct file *filp)
 {
 	while (spacefree(dev) == 0) { /* full */
 		DEFINE_WAIT(wait);
-		
+
 		up(&dev->sem);
 		if (filp->f_flags & O_NONBLOCK)
 			return -EAGAIN;
-		PDEBUG("\"%s\" writing: going to sleep\n",current->comm);
+		PDEBUG("\"%s\" writing: going to sleep\n", current->comm);
 		prepare_to_wait(&dev->outq, &wait, TASK_INTERRUPTIBLE);
 		if (spacefree(dev) == 0)
 			schedule();
 		finish_wait(&dev->outq, &wait);
-		if (signal_pending(current))
-			return -ERESTARTSYS; /* signal: tell the fs layer to handle it */
+		if (signal_pending(current)) {
+			/* signal: tell the fs layer to handle it */
+			return -ERESTARTSYS;
+		}
 		if (down_interruptible(&dev->sem))
 			return -ERESTARTSYS;
 	}
 	return 0;
-}	
+}
 
 /* How much space is free? */
 static int spacefree(struct scull_pipe *dev)
@@ -187,8 +193,8 @@ static int spacefree(struct scull_pipe *dev)
 	return ((dev->rp + dev->buffersize - dev->wp) % dev->buffersize) - 1;
 }
 
-static ssize_t scull_p_write(struct file *filp, const char __user *buf, size_t count,
-                loff_t *f_pos)
+static ssize_t scull_p_write(struct file *filp, const char __user *buf,
+			     size_t count, loff_t *f_pos)
 {
 	struct scull_pipe *dev = filp->private_data;
 	int result;
@@ -203,13 +209,17 @@ static ssize_t scull_p_write(struct file *filp, const char __user *buf, size_t c
 
 	/* ok, space is there, accept something */
 	count = min(count, (size_t)spacefree(dev));
-	if (dev->wp >= dev->rp)
-		count = min(count, (size_t)(dev->end - dev->wp)); /* to end-of-buf */
-	else /* the write pointer has wrapped, fill up to rp-1 */
+	if (dev->wp >= dev->rp) {
+		/* to end-of-buf */
+		count = min(count, (size_t)(dev->end - dev->wp));
+	} else {
+		/* the write pointer has wrapped, fill up to rp-1 */
 		count = min(count, (size_t)(dev->rp - dev->wp - 1));
-	PDEBUG("Going to accept %li bytes to %p from %p\n", (long)count, dev->wp, buf);
+	}
+	PDEBUG("Going to accept %li bytes to %p from %p\n", (long)count,
+	       dev->wp, buf);
 	if (copy_from_user(dev->wp, buf, count)) {
-		up (&dev->sem);
+		up(&dev->sem);
 		return -EFAULT;
 	}
 	dev->wp += count;
@@ -223,7 +233,7 @@ static ssize_t scull_p_write(struct file *filp, const char __user *buf, size_t c
 	/* and signal asynchronous readers, explained late in chapter 5 */
 	if (dev->async_queue)
 		kill_fasync(&dev->async_queue, SIGIO, POLL_IN);
-	PDEBUG("\"%s\" did write %li bytes\n",current->comm, (long)count);
+	PDEBUG("\"%s\" did write %li bytes\n", current->comm, (long)count);
 	return count;
 }
 
@@ -269,17 +279,19 @@ static int scull_read_p_mem(struct seq_file *s, void *v)
 	int i;
 	struct scull_pipe *p;
 
-#define LIMIT (PAGE_SIZE-200)        /* don't print any more after this size */
+#define LIMIT (PAGE_SIZE-200)	     /* don't print any more after this size */
 	seq_printf(s, "Default buffersize is %i\n", scull_p_buffer);
-	for(i = 0; i<scull_p_nr_devs && s->count <= LIMIT; i++) {
+	for (i = 0; i < scull_p_nr_devs && s->count <= LIMIT; i++) {
 		p = &scull_p_devices[i];
 		if (down_interruptible(&p->sem))
 			return -ERESTARTSYS;
 		seq_printf(s, "\nDevice %i: %p\n", i, p);
 /*		seq_printf(s, "   Queues: %p %p\n", p->inq, p->outq);*/
-		seq_printf(s, "   Buffer: %p to %p (%i bytes)\n", p->buffer, p->end, p->buffersize);
+		seq_printf(s, "   Buffer: %p to %p (%i bytes)\n", p->buffer,
+			   p->end, p->buffersize);
 		seq_printf(s, "   rp %p   wp %p\n", p->rp, p->wp);
-		seq_printf(s, "   readers %i   writers %i\n", p->nreaders, p->nwriters);
+		seq_printf(s, "   readers %i   writers %i\n", p->nreaders,
+			   p->nwriters);
 		up(&p->sem);
 	}
 	return 0;
@@ -291,9 +303,9 @@ static int scullpipe_proc_open(struct inode *inode, struct file *file)
 }
 
 static struct file_operations scullpipe_proc_ops = {
-	.owner   = THIS_MODULE,
-	.open    = scullpipe_proc_open,
-	.read    = seq_read,
+	.owner	 = THIS_MODULE,
+	.open	 = scullpipe_proc_open,
+	.read	 = seq_read,
 	.llseek  = seq_lseek,
 	.release = single_release
 };
@@ -325,16 +337,15 @@ struct file_operations scull_pipe_fops = {
 static void scull_p_setup_cdev(struct scull_pipe *dev, int index)
 {
 	int err, devno = scull_p_devno + index;
-    
+
 	cdev_init(&dev->cdev, &scull_pipe_fops);
 	dev->cdev.owner = THIS_MODULE;
-	err = cdev_add (&dev->cdev, devno, 1);
+	err = cdev_add(&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err)
 		printk(KERN_NOTICE "Error %d adding scullpipe%d", err, index);
 }
 
- 
 
 /*
  * Initialize the pipe devs; return how many we did.
@@ -345,11 +356,13 @@ int scull_p_init(dev_t firstdev)
 
 	result = register_chrdev_region(firstdev, scull_p_nr_devs, "scullp");
 	if (result < 0) {
-		printk(KERN_NOTICE "Unable to get scullp region, error %d\n", result);
+		printk(KERN_NOTICE "Unable to get scullp region, error %d\n",
+		       result);
 		return 0;
 	}
 	scull_p_devno = firstdev;
-	scull_p_devices = kmalloc(scull_p_nr_devs * sizeof(struct scull_pipe), GFP_KERNEL);
+	scull_p_devices = kmalloc(scull_p_nr_devs * sizeof(struct scull_pipe),
+				  GFP_KERNEL);
 	if (scull_p_devices == NULL) {
 		unregister_chrdev_region(firstdev, scull_p_nr_devs);
 		return 0;

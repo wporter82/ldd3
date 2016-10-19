@@ -28,7 +28,7 @@
 #ifdef SCULL_DEBUG
 #  ifdef __KERNEL__
      /* This one if debugging is on, and kernel space */
-#    define PDEBUG(fmt, args...) dev_dbg("scull: " fmt, ## args)
+#    define PDEBUG(fmt, args...) pr_debug("scull: " fmt, ## args)
 #  else
      /* This one for user space */
 #    define PDEBUG(fmt, args...) fprintf(stderr, fmt, ## args)

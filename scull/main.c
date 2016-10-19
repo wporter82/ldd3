@@ -164,11 +164,11 @@ static int scull_seq_show(struct seq_file *s, void *v)
 	up(&dev->sem);
 	return 0;
 }
-	
+
 /*
  * Tie the sequence operators up.
  */
-static struct seq_operations scull_seq_ops = {
+static const struct seq_operations scull_seq_ops = {
 	.start = scull_seq_start,
 	.next  = scull_seq_next,
 	.stop  = scull_seq_stop,
@@ -192,22 +192,22 @@ static int scullseq_proc_open(struct inode *inode, struct file *file)
 /*
  * Create a set of file operations for our proc files.
  */
-static struct file_operations scullmem_proc_ops = {
-	.owner   = THIS_MODULE,
-	.open    = scullmem_proc_open,
-	.read    = seq_read,
+static const struct file_operations scullmem_proc_ops = {
+	.owner	 = THIS_MODULE,
+	.open	 = scullmem_proc_open,
+	.read	 = seq_read,
 	.llseek  = seq_lseek,
 	.release = single_release
 };
 
-static struct file_operations scullseq_proc_ops = {
-	.owner   = THIS_MODULE,
-	.open    = scullseq_proc_open,
-	.read    = seq_read,
+static const struct file_operations scullseq_proc_ops = {
+	.owner	 = THIS_MODULE,
+	.open	 = scullseq_proc_open,
+	.read	 = seq_read,
 	.llseek  = seq_lseek,
 	.release = seq_release
 };
-	
+
 
 /*
  * Actually create (and remove) the /proc file(s).
@@ -557,7 +557,7 @@ loff_t scull_llseek(struct file *filp, loff_t off, int whence)
 
 
 
-struct file_operations scull_fops = {
+const struct file_operations scull_fops = {
 	.owner =    THIS_MODULE,
 	.llseek =   scull_llseek,
 	.read =     scull_read,

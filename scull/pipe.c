@@ -208,7 +208,7 @@ static ssize_t scull_p_write(struct file *filp, const char __user *buf,
 		return result; /* scull_getwritespace called up(&dev->sem) */
 
 	/* ok, space is there, accept something */
-	count = min(count, (size_t)spacefree(dev));
+	count = min_t(size_t, count, spacefree(dev));
 	if (dev->wp >= dev->rp) {
 		/* to end-of-buf */
 		count = min(count, (size_t)(dev->end - dev->wp));

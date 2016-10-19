@@ -618,7 +618,7 @@ static void scull_setup_cdev(struct scull_dev *dev, int index)
 	err = cdev_add(&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err)
-		printk(KERN_NOTICE "Error %d adding scull%d", err, index);
+		pr_notice("Error %d adding scull%d", err, index);
 }
 
 
@@ -640,7 +640,7 @@ int scull_init_module(void)
 		scull_major = MAJOR(dev);
 	}
 	if (result < 0) {
-		printk(KERN_WARNING "scull: can't get major %d\n", scull_major);
+		pr_warn("scull: can't get major %d\n", scull_major);
 		return result;
 	}
 

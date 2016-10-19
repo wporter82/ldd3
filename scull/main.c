@@ -627,10 +627,10 @@ int scull_init_module(void)
 	int result, i;
 	dev_t dev = 0;
 
-/*
- * Get a range of minor numbers to work with, asking for a dynamic
- * major unless directed otherwise at load time.
- */
+	/*
+	 * Get a range of minor numbers to work with, asking for a dynamic
+	 * major unless directed otherwise at load time.
+	 */
 	if (scull_major) {
 		dev = MKDEV(scull_major, scull_minor);
 		result = register_chrdev_region(dev, scull_nr_devs, "scull");

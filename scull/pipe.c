@@ -302,7 +302,7 @@ static int scullpipe_proc_open(struct inode *inode, struct file *file)
 	return single_open(file, scull_read_p_mem, NULL);
 }
 
-static struct file_operations scullpipe_proc_ops = {
+static const struct file_operations scullpipe_proc_ops = {
 	.owner	 = THIS_MODULE,
 	.open	 = scullpipe_proc_open,
 	.read	 = seq_read,
@@ -318,7 +318,7 @@ static struct file_operations scullpipe_proc_ops = {
  * The file operations for the pipe device
  * (some are overlayed with bare scull)
  */
-struct file_operations scull_pipe_fops = {
+const struct file_operations scull_pipe_fops = {
 	.owner =	THIS_MODULE,
 	.llseek =	no_llseek,
 	.read =		scull_p_read,

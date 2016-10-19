@@ -18,6 +18,7 @@
 #define _SCULL_H_
 
 #include <linux/ioctl.h> /* needed for the _IOW etc stuff used later */
+#include <linux/device.h>
 
 /*
  * Macros to help debugging
@@ -27,7 +28,7 @@
 #ifdef SCULL_DEBUG
 #  ifdef __KERNEL__
      /* This one if debugging is on, and kernel space */
-#    define PDEBUG(fmt, args...) printk( KERN_DEBUG "scull: " fmt, ## args)
+#    define PDEBUG(fmt, args...) dev_dbg("scull: " fmt, ## args)
 #  else
      /* This one for user space */
 #    define PDEBUG(fmt, args...) fprintf(stderr, fmt, ## args)

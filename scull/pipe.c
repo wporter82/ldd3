@@ -343,7 +343,7 @@ static void scull_p_setup_cdev(struct scull_pipe *dev, int index)
 	err = cdev_add(&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err)
-		printk(KERN_NOTICE "Error %d adding scullpipe%d", err, index);
+		pr_notice("Error %d adding scullpipe%d", err, index);
 }
 
 
@@ -356,8 +356,7 @@ int scull_p_init(dev_t firstdev)
 
 	result = register_chrdev_region(firstdev, scull_p_nr_devs, "scullp");
 	if (result < 0) {
-		printk(KERN_NOTICE "Unable to get scullp region, error %d\n",
-		       result);
+		pr_notice("Unable to get scullp region, error %d\n", result);
 		return 0;
 	}
 	scull_p_devno = firstdev;

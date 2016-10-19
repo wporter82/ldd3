@@ -362,10 +362,10 @@ static void scull_access_setup(dev_t devno, struct scull_adev_info *devinfo)
 	err = cdev_add(&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err) {
-		printk(KERN_NOTICE "Error %d adding %s\n", err, devinfo->name);
+		pr_notice("Error %d adding %s\n", err, devinfo->name);
 		kobject_put(&dev->cdev.kobj);
 	} else
-		printk(KERN_NOTICE "%s registered at %x\n", devinfo->name,
+		pr_notice("%s registered at %x\n", devinfo->name,
 		       devno);
 }
 
@@ -377,7 +377,7 @@ int scull_access_init(dev_t firstdev)
 	/* Get our number space */
 	result = register_chrdev_region(firstdev, SCULL_N_ADEVS, "sculla");
 	if (result < 0) {
-		printk(KERN_WARNING "sculla: device number registration failed\n");
+		pr_warn("sculla: device number registration failed\n");
 		return 0;
 	}
 	scull_a_firstdev = firstdev;

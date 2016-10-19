@@ -48,8 +48,8 @@ static int scull_p_nr_devs = SCULL_P_NR_DEVS;	/* number of pipe devices */
 int scull_p_buffer =  SCULL_P_BUFFER;	/* buffer size */
 dev_t scull_p_devno;			/* Our first device number */
 
-module_param(scull_p_nr_devs, int, 0);	/* FIXME check perms */
-module_param(scull_p_buffer, int, 0);
+module_param(scull_p_nr_devs, int, 0000);	/* FIXME check perms */
+module_param(scull_p_buffer, int, 0000);
 
 static struct scull_pipe *scull_p_devices;
 
@@ -375,7 +375,7 @@ int scull_p_init(dev_t firstdev)
 		scull_p_setup_cdev(scull_p_devices + i, i);
 	}
 #ifdef SCULL_DEBUG
-	proc_create("scullpipe", 0, NULL, &scullpipe_proc_ops);
+	proc_create("scullpipe", 0444, NULL, &scullpipe_proc_ops);
 #endif
 	return scull_p_nr_devs;
 }

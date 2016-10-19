@@ -361,7 +361,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
 	if (dptr == NULL)
 		goto out;
 	if (!dptr->data) {
-		dptr->data = kmalloc(qset * sizeof(char *), GFP_KERNEL);
+		dptr->data = kmalloc_array(qset, sizeof(char *), GFP_KERNEL);
 		if (!dptr->data)
 			goto out;
 		memset(dptr->data, 0, qset * sizeof(char *));
@@ -648,7 +648,8 @@ int scull_init_module(void)
 	 * allocate the devices -- we can't have them static, as the number
 	 * can be specified at load time
 	 */
-	scull_devices = kmalloc(scull_nr_devs * sizeof(struct scull_dev), GFP_KERNEL);
+	scull_devices = kmalloc_array(scull_nr_devs, sizeof(struct scull_dev),
+				      GFP_KERNEL);
 	if (!scull_devices) {
 		result = -ENOMEM;
 		goto fail;  /* Make this more graceful */

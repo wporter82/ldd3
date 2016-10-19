@@ -42,11 +42,11 @@ int scull_nr_devs = SCULL_NR_DEVS;	/* number of bare scull devices */
 int scull_quantum = SCULL_QUANTUM;
 int scull_qset =    SCULL_QSET;
 
-module_param(scull_major, int, S_IRUGO);
-module_param(scull_minor, int, S_IRUGO);
-module_param(scull_nr_devs, int, S_IRUGO);
-module_param(scull_quantum, int, S_IRUGO);
-module_param(scull_qset, int, S_IRUGO);
+module_param(scull_major, int, 0444);
+module_param(scull_minor, int, 0444);
+module_param(scull_nr_devs, int, 0444);
+module_param(scull_quantum, int, 0444);
+module_param(scull_qset, int, 0444);
 
 MODULE_AUTHOR("Alessandro Rubini, Jonathan Corbet");
 MODULE_LICENSE("Dual BSD/GPL");
@@ -215,7 +215,7 @@ static void scull_create_proc(void)
 	proc_create_data("scullmem", 0 /* default mode */,
 			NULL /* parent dir */, &scullmem_proc_ops,
 			NULL /* client data */);
-	proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
+	proc_create("scullseq", 0444, NULL, &scullseq_proc_ops);
 }
 
 static void scull_remove_proc(void)

@@ -87,29 +87,32 @@ int scull_trim(struct scull_dev *dev)
 
 int scull_read_procmem(struct seq_file *s, void *v)
 {
-        int i, j;
-        int limit = s->size - 80; /* Don't print more than this */
+	int i, j;
+	int limit = s->size - 80; /* Don't print more than this */
 
-        for (i = 0; i < scull_nr_devs && s->count <= limit; i++) {
-                struct scull_dev *d = &scull_devices[i];
-                struct scull_qset *qs = d->data;
-                if (down_interruptible(&d->sem))
-                        return -ERESTARTSYS;
-                seq_printf(s,"\nDevice %i: qset %i, q %i, sz %li\n",
-                             i, d->qset, d->quantum, d->size);
-                for (; qs && s->count <= limit; qs = qs->next) { /* scan the list */
-                        seq_printf(s, "  item at %p, qset at %p\n",
-                                     qs, qs->data);
-                        if (qs->data && !qs->next) /* dump only the last item */
-                                for (j = 0; j < d->qset; j++) {
-                                        if (qs->data[j])
-                                                seq_printf(s, "    % 4i: %8p\n",
-                                                             j, qs->data[j]);
-                                }
-                }
-                up(&scull_devices[i].sem);
-        }
-        return 0;
+	for (i = 0; i < scull_nr_devs && s->count <= limit; i++) {
+		struct scull_dev *d = &scull_devices[i];
+		struct scull_qset *qs = d->data;
+
+		if (down_interruptible(&d->sem))
+			return -ERESTARTSYS;
+		seq_printf(s, "\nDevice %i: qset %i, q %i, sz %li\n",
+			     i, d->qset, d->quantum, d->size);
+		/* scan the list */
+		for (; qs && s->count <= limit; qs = qs->next) {
+			seq_printf(s, "  item at %p, qset at %p\n",
+				     qs, qs->data);
+			/* dump only the last item */
+			if (qs->data && !qs->next)
+				for (j = 0; j < d->qset; j++) {
+					if (qs->data[j])
+						seq_printf(s, "    % 4i: %8p\n",
+							     j, qs->data[j]);
+				}
+		}
+		up(&scull_devices[i].sem);
+	}
+	return 0;
 }
 
 

@@ -360,8 +360,9 @@ int scull_p_init(dev_t firstdev)
 		return 0;
 	}
 	scull_p_devno = firstdev;
-	scull_p_devices = kmalloc(scull_p_nr_devs * sizeof(struct scull_pipe),
-				  GFP_KERNEL);
+	scull_p_devices = kmalloc_array(scull_p_nr_devs,
+					sizeof(struct scull_pipe),
+					GFP_KERNEL);
 	if (scull_p_devices == NULL) {
 		unregister_chrdev_region(firstdev, scull_p_nr_devs);
 		return 0;

@@ -14,7 +14,7 @@
  */
 
 /* FIXME: cloned devices as a use for kobjects? */
- 
+
 #include <linux/kernel.h> /* printk() */
 #include <linux/module.h>
 #include <linux/slab.h>   /* kmalloc() */
@@ -53,13 +53,13 @@ static int scull_s_open(struct inode *inode, struct file *filp)
 {
 	struct scull_dev *dev = &scull_s_device; /* device information */
 
-	if (! atomic_dec_and_test (&scull_s_available)) {
+	if (!atomic_dec_and_test(&scull_s_available)) {
 		atomic_inc(&scull_s_available);
 		return -EBUSY; /* already open */
 	}
 
 	/* then, everything else is copied from the bare scull device */
-	if ( (filp->f_flags & O_ACCMODE) == O_WRONLY)
+	if ((filp->f_flags & O_ACCMODE) == O_WRONLY)
 		scull_trim(dev);
 	filp->private_data = dev;
 	return 0;          /* success */
@@ -76,13 +76,13 @@ static int scull_s_release(struct inode *inode, struct file *filp)
  * The other operations for the single-open device come from the bare device
  */
 struct file_operations scull_sngl_fops = {
-	.owner =	THIS_MODULE,
-	.llseek =     	scull_llseek,
-	.read =       	scull_read,
-	.write =      	scull_write,
-	.unlocked_ioctl = scull_ioctl,
-	.open =       	scull_s_open,
-	.release =    	scull_s_release,
+	.owner		= THIS_MODULE,
+	.llseek		= scull_llseek,
+	.read		= scull_read,
+	.write		= scull_write,
+	.unlocked_ioctl	= scull_ioctl,
+	.open		= scull_s_open,
+	.release	= scull_s_release,
 };
 
 
@@ -102,10 +102,10 @@ static int scull_u_open(struct inode *inode, struct file *filp)
 	struct scull_dev *dev = &scull_u_device; /* device information */
 
 	spin_lock(&scull_u_lock);
-	if (scull_u_count && 
-	                (scull_u_owner != current_uid().val) &&  /* allow user */
-	                (scull_u_owner != current_euid().val) && /* allow whoever did su */
-			!capable(CAP_DAC_OVERRIDE)) { /* still allow root */
+	if (scull_u_count &&
+	    (scull_u_owner != current_uid().val) &&  /* allow user */
+	    (scull_u_owner != current_euid().val) && /* allow whoever did su */
+	    !capable(CAP_DAC_OVERRIDE)) { /* still allow root */
 		spin_unlock(&scull_u_lock);
 		return -EBUSY;   /* -EPERM would confuse the user */
 	}
@@ -173,11 +173,15 @@ static int scull_w_open(struct inode *inode, struct file *filp)
 	struct scull_dev *dev = &scull_w_device; /* device information */
 
 	spin_lock(&scull_w_lock);
-	while (! scull_w_available()) {
+	while (!scull_w_available()) {
 		spin_unlock(&scull_w_lock);
-		if (filp->f_flags & O_NONBLOCK) return -EAGAIN;
-		if (wait_event_interruptible (scull_w_wait, scull_w_available()))
-			return -ERESTARTSYS; /* tell the fs layer to handle it */
+		if (filp->f_flags & O_NONBLOCK)
+			return -EAGAIN;
+		if (wait_event_interruptible(scull_w_wait,
+		    scull_w_available())) {
+			/* tell the fs layer to handle it */
+			return -ERESTARTSYS;
+		}
 		spin_lock(&scull_w_lock);
 	}
 	if (scull_w_count == 0)
@@ -201,8 +205,10 @@ static int scull_w_release(struct inode *inode, struct file *filp)
 	temp = scull_w_count;
 	spin_unlock(&scull_w_lock);
 
-	if (temp == 0)
-		wake_up_interruptible_sync(&scull_w_wait); /* awake other uid's */
+	if (temp == 0) {
+		/* awake other uid's */
+		wake_up_interruptible_sync(&scull_w_wait);
+	}
 	return 0;
 }
 
@@ -232,7 +238,7 @@ struct scull_listitem {
 	struct scull_dev device;
 	dev_t key;
 	struct list_head list;
-    
+
 };
 
 /* The list of devices, and a lock to protect it */
@@ -240,7 +246,7 @@ static LIST_HEAD(scull_c_list);
 static DEFINE_SPINLOCK(scull_c_lock);
 
 /* A placeholder scull_dev which really just holds the cdev stuff. */
-static struct scull_dev scull_c_device;   
+static struct scull_dev scull_c_device;
 
 /* Look for a device or create one if missing */
 static struct scull_dev *scull_c_lookfor_device(dev_t key)
@@ -273,8 +279,8 @@ static int scull_c_open(struct inode *inode, struct file *filp)
 {
 	struct scull_dev *dev;
 	dev_t key;
- 
-	if (!current->signal->tty) { 
+
+	if (!current->signal->tty) {
 		PDEBUG("Process \"%s\" has no ctl tty\n", current->comm);
 		return -EINVAL;
 	}
@@ -289,7 +295,7 @@ static int scull_c_open(struct inode *inode, struct file *filp)
 		return -ENOMEM;
 
 	/* then, everything else is copied from the bare scull device */
-	if ( (filp->f_flags & O_ACCMODE) == O_WRONLY)
+	if ((filp->f_flags & O_ACCMODE) == O_WRONLY)
 		scull_trim(dev);
 	filp->private_data = dev;
 	return 0;          /* success */
@@ -339,7 +345,7 @@ static struct scull_adev_info {
 /*
  * Set up a single device.
  */
-static void scull_access_setup (dev_t devno, struct scull_adev_info *devinfo)
+static void scull_access_setup(dev_t devno, struct scull_adev_info *devinfo)
 {
 	struct scull_dev *dev = devinfo->sculldev;
 	int err;
@@ -353,13 +359,14 @@ static void scull_access_setup (dev_t devno, struct scull_adev_info *devinfo)
 	cdev_init(&dev->cdev, devinfo->fops);
 	kobject_set_name(&dev->cdev.kobj, devinfo->name);
 	dev->cdev.owner = THIS_MODULE;
-	err = cdev_add (&dev->cdev, devno, 1);
-        /* Fail gracefully if need be */
+	err = cdev_add(&dev->cdev, devno, 1);
+	/* Fail gracefully if need be */
 	if (err) {
 		printk(KERN_NOTICE "Error %d adding %s\n", err, devinfo->name);
 		kobject_put(&dev->cdev.kobj);
 	} else
-		printk(KERN_NOTICE "%s registered at %x\n", devinfo->name, devno);
+		printk(KERN_NOTICE "%s registered at %x\n", devinfo->name,
+		       devno);
 }
 
 
@@ -368,7 +375,7 @@ int scull_access_init(dev_t firstdev)
 	int result, i;
 
 	/* Get our number space */
-	result = register_chrdev_region (firstdev, SCULL_N_ADEVS, "sculla");
+	result = register_chrdev_region(firstdev, SCULL_N_ADEVS, "sculla");
 	if (result < 0) {
 		printk(KERN_WARNING "sculla: device number registration failed\n");
 		return 0;
@@ -377,7 +384,7 @@ int scull_access_init(dev_t firstdev)
 
 	/* Set up each device. */
 	for (i = 0; i < SCULL_N_ADEVS; i++)
-		scull_access_setup (firstdev + i, scull_access_devs + i);
+		scull_access_setup(firstdev + i, scull_access_devs + i);
 	return SCULL_N_ADEVS;
 }
 
@@ -393,11 +400,12 @@ void scull_access_cleanup(void)
 	/* Clean up the static devs */
 	for (i = 0; i < SCULL_N_ADEVS; i++) {
 		struct scull_dev *dev = scull_access_devs[i].sculldev;
+
 		cdev_del(&dev->cdev);
 		scull_trim(scull_access_devs[i].sculldev);
 	}
 
-    	/* And all the cloned devices */
+	/* And all the cloned devices */
 	list_for_each_entry_safe(lptr, next, &scull_c_list, list) {
 		list_del(&lptr->list);
 		scull_trim(&(lptr->device));

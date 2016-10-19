@@ -278,7 +278,8 @@ struct scull_qset *scull_follow(struct scull_dev *dev, int n)
 	/* Then follow the list */
 	while (n--) {
 		if (!qs->next) {
-			qs->next = kmalloc(sizeof(struct scull_qset), GFP_KERNEL);
+			qs->next = kmalloc(sizeof(struct scull_qset),
+					   GFP_KERNEL);
 			if (qs->next == NULL)
 				return NULL;  /* Never mind */
 			memset(qs->next, 0, sizeof(struct scull_qset));

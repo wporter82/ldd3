@@ -75,7 +75,7 @@ static int scull_s_release(struct inode *inode, struct file *filp)
 /*
  * The other operations for the single-open device come from the bare device
  */
-struct file_operations scull_sngl_fops = {
+const struct file_operations scull_sngl_fops = {
 	.owner		= THIS_MODULE,
 	.llseek		= scull_llseek,
 	.read		= scull_read,
@@ -137,7 +137,7 @@ static int scull_u_release(struct inode *inode, struct file *filp)
 /*
  * The other operations for the device come from the bare device
  */
-struct file_operations scull_user_fops = {
+const struct file_operations scull_user_fops = {
 	.owner =      THIS_MODULE,
 	.llseek =     scull_llseek,
 	.read =       scull_read,
@@ -216,7 +216,7 @@ static int scull_w_release(struct inode *inode, struct file *filp)
 /*
  * The other operations for the device come from the bare device
  */
-struct file_operations scull_wusr_fops = {
+const struct file_operations scull_wusr_fops = {
 	.owner =      THIS_MODULE,
 	.llseek =     scull_llseek,
 	.read =       scull_read,
@@ -315,7 +315,7 @@ static int scull_c_release(struct inode *inode, struct file *filp)
 /*
  * The other operations for the device come from the bare device
  */
-struct file_operations scull_priv_fops = {
+const struct file_operations scull_priv_fops = {
 	.owner =    THIS_MODULE,
 	.llseek =   scull_llseek,
 	.read =     scull_read,
@@ -333,7 +333,7 @@ struct file_operations scull_priv_fops = {
 static struct scull_adev_info {
 	char *name;
 	struct scull_dev *sculldev;
-	struct file_operations *fops;
+	const struct file_operations *fops;
 } scull_access_devs[] = {
 	{ "scullsingle", &scull_s_device, &scull_sngl_fops },
 	{ "sculluid", &scull_u_device, &scull_user_fops },
